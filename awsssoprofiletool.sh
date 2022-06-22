@@ -177,78 +177,79 @@ do
 
     if [ $? -ne 0 ];
     then
-	echo "Failed to retrieve roles."
-	exit 1
+  echo "Failed to retrieve roles."
+  exit 1
     fi
 
     while IFS=$'\t' read junk junk rolename;
     do
-	echo
-	if $interactive ;
-	then
-	    echo -n "Create a profile for $rolename role? (Y/n): "
-	    read create < /dev/tty
-	    if [ -z "$create" ];
-	    then
-		:
-	    elif [ "$create" == 'n' ] || [ "$create" == 'N' ];
-	    then
-		continue
-	    fi
-	    
-	    echo
-	    echo -n "CLI default client Region [$defregion]: "
-	    read awsregion < /dev/tty
-	    if [ -z "$awsregion" ]; then awsregion=$defregion ; fi
-	    defregion=$awsregion
-	    echo -n "CLI default output format [$defoutput]: "
-	    read output < /dev/tty
-	    if [ -z "$output" ]; then output=$defoutput ; fi
-	    defoutput=$output
-	fi
-	
-	p="$rolename-$acctnum"
-	while true ; do
-	    if $interactive ;
-	    then
-		echo -n "CLI profile name [$p]: "
-		read profilename < /dev/tty
-		if [ -z "$profilename" ]; then profilename=$p ; fi
-		if [ -f "$profilefile" ];
-		then
-		    :
-		else
-		    break
-		fi
-	    else
-		profilename=$p
-	    fi
-	    
-	    if [ $(grep -ce "^\s*\[\s*profile\s\s*$profilename\s*\]" "$profilefile") -eq 0 ];
-	    then
-		break
-	    else
-		echo "Profile name already exists!"
-		if $interactive ;
-		then
-		    :
-		else
-		    echo "Skipping..."
-		    continue 2
-		fi
-	    fi
-	done
-	echo -n "Creating $profilename... "
-	echo "" >> "$profilefile"
-	echo "[profile $profilename]" >> "$profilefile"
-	echo "sso_start_url = $2" >> "$profilefile"
-	echo "sso_region = $1" >> "$profilefile"
-	echo "sso_account_id = $acctnum" >> "$profilefile"
-	echo "sso_role_name = $rolename" >> "$profilefile"
-	echo "region = $awsregion" >> "$profilefile"
-	echo "output = $output" >> "$profilefile"
-	echo "Succeeded"
-	created_profiles+=("$profilename")
+  echo
+  if $interactive ;
+  then
+      echo -n "Create a profile for $rolename role? (Y/n): "
+      read create < /dev/tty
+      if [ -z "$create" ];
+      then
+    :
+      elif [ "$create" == 'n' ] || [ "$create" == 'N' ];
+      then
+    continue
+      fi
+      
+      echo
+      echo -n "CLI default client Region [$defregion]: "
+      read awsregion < /dev/tty
+      if [ -z "$awsregion" ]; then awsregion=$defregion ; fi
+      defregion=$awsregion
+      echo -n "CLI default output format [$defoutput]: "
+      read output < /dev/tty
+      if [ -z "$output" ]; then output=$defoutput ; fi
+      defoutput=$output
+  fi
+  
+  pt="${acctname}.${rolename}"
+  p=`echo ${pt} | sed 's/\r//'`
+  while true ; do
+      if $interactive ;
+      then
+    echo -n "CLI profile name [$p]: "
+    read profilename < /dev/tty
+    if [ -z "$profilename" ]; then profilename=$p ; fi
+    if [ -f "$profilefile" ];
+    then
+        :
+    else
+        break
+    fi
+      else
+    profilename=$p
+      fi
+      
+      if [ $(grep -ce "^\s*\[\s*profile\s\s*$profilename\s*\]" "$profilefile") -eq 0 ];
+      then
+    break
+      else
+    echo "Profile name already exists!"
+    if $interactive ;
+    then
+        :
+    else
+        echo "Skipping..."
+        continue 2
+    fi
+      fi
+  done
+  echo -n "Creating $profilename... "
+  echo "" >> "$profilefile"
+  echo "[profile $profilename]" >> "$profilefile"
+  echo "sso_start_url = $2" >> "$profilefile"
+  echo "sso_region = $1" >> "$profilefile"
+  echo "sso_account_id = $acctnum" >> "$profilefile"
+  echo "sso_role_name = $rolename" >> "$profilefile"
+  echo "region = $awsregion" >> "$profilefile"
+  echo "output = $output" >> "$profilefile"
+  echo "Succeeded"
+  created_profiles+=("$profilename")
     done < "$rolesfile"
     rm "$rolesfile"
 
